@@ -1,6 +1,9 @@
 
-## Create Database (laravel)
+## Node Dependencies 
 
+npm install
+
+## Create Database (laravel)
 
 ## Migrations
 

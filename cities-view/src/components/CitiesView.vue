@@ -1,44 +1,28 @@
 <template>
-<v-container class="mx-3 card-general">
-    <v-row>
-      <v-col md="6" class="mx-5">
-          <v-card xs12 sm12 md12 lg12 xl12 >
-            <p>Please select one: </p>   
-            <input type="radio" id="Uno" value="Uno" v-model="picked">
-            <label for="Uno">Country</label>
-            <br>
-            <input type="radio" id="Dos" value="Dos" v-model="picked">
-            <label for="Dos">City</label>
-            <br>
-            <input type="radio" id="Tres" value="Tres" v-model="picked">
-            <label for="Tres">Location</label>
-            <br>
-          </v-card>
-      </v-col>
-      <v-col md="6" class="mx-5">
-        <v-card xs12 sm12 md12 lg12 xl12 >
-        <v-form id="uploadForm" enctype="multipart/form-data" v-on:change="SaveFile">
-          <input type="file" id="file" name="file">
-        </v-form> 
-        </v-card>
-      </v-col>
-    </v-row>
-    <v-row>
-      <div v-show="picked==='Uno'">
+<v-container >
+    <v-row >
+      <div class="div" md="6">
+          <p>Please select one: </p>   
+          <input type="radio" id="Uno" value="Uno" v-model="picked" >
+          <label for="Uno" >Country</label>          
+          <input type="radio" id="Dos" value="Dos" v-model="picked" class="inp">
+          <label for="Dos" >City</label>          
+          <input type="radio" id="Tres" value="Tres" v-model="picked" class="inp">
+          <label for="Tres" >Location</label>
+
+          <div v-show="picked==='Uno'">
           <p>Country: </p>   
           <input v-model="countries.name" placeholder="Country" >    
-          <button v-on:click="AddCountry" class="inp">Add Country</button>    
+          <button v-on:click="AddCountry" class="inp btm">Add Country</button>    
         </div>
         <div v-show="picked==='Dos'">
           <p>Select a Country: </p>   
-          
-            <select v-model="selectedcountry" 
-                        name="country" style="width: 150px; margin-bottom: 10px; ">
-              <option v-for="c in countrylist"
-                              :value="c.idcountry"
-                              v-text="c.name" v-bind:key="c.idcountry"></option>
+          <select v-model="selectedcountry" 
+                      name="country" style="width: 150px; margin-bottom: 10px; ">
+            <option v-for="c in countrylist"
+                            :value="c.idcountry"
+                            v-text="c.name" v-bind:key="c.idcountry"></option>
           </select>
-          
           <input v-model="cities.name" placeholder="City" class="inp">    
           <button v-on:click="AddCity" class="inp">Add City</button>
         </div>
@@ -53,8 +37,13 @@
             <input v-model="locations.name" placeholder="Location" class="inp">    
           <button v-on:click="AddLocation" class="inp">Add Location</button>
         </div>
+      </div>
+      
+      <div class="div" md="6">
+          <p>Select File to Import: </p>
+          <input type="file" id="file" name="fileSubmit" @change="SaveFile">
+      </div>
     </v-row>
-
     <v-row>
       <div class="div" >
         <div > 
@@ -120,46 +109,69 @@ export default {
     async AddCountry() {           
       const result = await axios.post(this.url + '/api/country/add', this.countries);
       if(result.data.status == 'success')
-        await this.getListCountries();      
+      {
+        alert("Country success");
+        await this.getListCountries();  
+      }
+      if(result.data.status == 'warning')
+      alert(result.data.message); 
+
     },
     
     async AddCity() {        
       this.cities.idcountry = this.selectedcountry;
       const result = await axios.post(this.url + '/api/city/add', this.cities);
       if(result.data.status == 'success')
-        await this.getListCities();  
+      {
+        alert("City success");
+        await this.getListCities();
+      }
+      if(result.data.status == 'warning')
+      alert(result.data.message);  
     },
 
     async AddLocation() {        
       this.locations.idcity = this.selectedcity;        
       const result = await axios.post(this.url + '/api/locations/add', this.locations);
       if(result.data.status == 'success')
+      {
+        alert("Location success");
         await this.getListCities(); 
+        await this.getListLocation(); 
+      }
+      if(result.data.status == 'warning')
+      alert(result.data.message); 
     },
 
     async getListCountries() {  
-      const result = await axios.post(this.url + '/api/country/all') 
+      const result = await axios.post(this.url + '/api/country/all')
       this.countrylist = result.data.data;
     },
 
     async getListCities() {  
-      const result = await axios.post(this.url + '/api/city/all') 
+      const result = await axios.post(this.url + '/api/city/all')
       this.citylist = result.data.data;
     },
 
     async getListLocation() {  
-      const result = await axios.post(this.url + '/api/locations/all') 
+      const result = await axios.post(this.url + '/api/locations/all')
       this.locationlist = result.data.data;
     },
 
-    async SaveFile(){
-        let formData = new FormData();
-        formData.append('file', this.file);
-        axios.post(this.url + '/api/locations/saveFile', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-        })
+    async SaveFile(event){
+      const file = event.target.files[0];
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const result =  await axios.post(this.url + '/api/locations/saveFile', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+      })
+      if(result.data.status == 'success')
+      { 
+        await this.getListLocation(); 
+      }
     },
   }
  
@@ -168,71 +180,70 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+
 .div {
-  font-family: sans-serif;
+  font-family: '微软雅黑',arail; 
   border: 1px solid #eee;
   border-radius: 2px;
-  padding: 20px 30px;
+  padding: 20px 20px;
   margin-top: 1em;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   user-select: none;
-  overflow-x: auto;
-}
+  overflow-x: auto;   
+} 
 
 .inp {  
   margin-left: 1em; 
-  
+} 
+
+select{
+  padding: 3px 10px;
+  font-family: '微软雅黑',arail;
+  border-color: rgb(151, 192, 135);
 }
 
-body {
-  font-family: Helvetica Neue, Arial, sans-serif;
-  font-size: 14px;
-  color: #444;
+input {
+  padding: 3px 10px;
+  font-family: '微软雅黑',arail;
+  border-color: rgb(151, 192, 135);
 }
+
+button {
+  padding: 3px 10px;
+  border: 2px solid rgb(151, 192, 135); 
+  border-radius: 2px;
+  color: #333;
+  background-color:rgb(151, 192, 135);  
+  font-size: 14px;
+  font-family: '微软雅黑',arail;   
+}
+
+.btn {
+  padding: 3px 10px;  
+  border-radius: 2px;
+  color: #333;    
+  font-size: 14px;
+  font-family: '微软雅黑',arail; 
+}
+
 
 table {
-  border: 2px solid #568570;
-  border-radius: 5px;
-  background-color: #fff;
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid rgb(151, 192, 135);
+  border-radius: 10px;
 }
 
-th {
-  color: rgba(49, 48, 48, 0.66);  
-  }
-
-/* th {
-  background-color: #42b983;
-  color: rgba(255,255,255,0.66);
-  cursor: pointer;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-} */
-
-/* td {
-  background-color: #f9f9f9;
-} */
-
-th, td {
-  min-width: 120px;
-  padding: 10px 20px;
+thead th {
+  width: 30%;
+  background-color:rgb(151, 192, 135);
+  font-family: '微软雅黑',arail; 
 }
 
-.arrow {
-  display: inline-block;
-  vertical-align: middle;
-  width: 0;
-  height: 0;
-  margin-left: 5px;
-  opacity: 0.66;
+body th{
+  border: 0.5px solid rgb(151, 192, 135);
+  font-family: '微软雅黑',arail; 
 }
-
-
-
-
-
-
-
 
 </style>

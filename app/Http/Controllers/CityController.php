@@ -49,18 +49,26 @@ class CityController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {
+    {        
         try {     
             $result = ["status" => "success"];
             $result["message"] =
                 "City success"; 
-            
+
             $atributes = collect($request);
-            $city = new City();
-            $city->name = $atributes['name'];            
-            $city->idcountry = $atributes['idcountry'];            
-            $city->save(); 
-            $result["data"] = $city;
+
+            if (City::where('name', '=', $atributes['name'])->where('idcountry', '=', $atributes['idcountry'])->exists()) { 
+                $result = ["status" => "warning"];
+                $result["message"] =
+                    "City already exists";
+            } 
+            else{
+                $city = new City();
+                $city->name = $atributes['name'];            
+                $city->idcountry = $atributes['idcountry'];            
+                $city->save(); 
+                $result["data"] = $city;
+            }  
         } catch (\Exception $e) {
             $result["status"] = "error";
             $result["error"] = $e->getMessage();

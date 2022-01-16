@@ -53,12 +53,20 @@ class CountryController extends Controller
             $result = ["status" => "success"];
             $result["message"] =
                 "Country success"; 
-            
+
             $atributes = collect($request);
-            $country = new Country();
-            $country->name = $atributes['name'];            
-            $country->save(); 
-            $result["data"] = $country;
+
+            if (Country::where('name', '=', $atributes['name'])->exists()) { 
+                $result = ["status" => "warning"];
+                $result["message"] =
+                    "Country already exists";
+            } 
+            else{
+                $country = new Country();
+                $country->name = $atributes['name'];            
+                $country->save(); 
+                $result["data"] = $country; 
+            }  
         } catch (\Exception $e) {
             $result["status"] = "error";
             $result["error"] = $e->getMessage();

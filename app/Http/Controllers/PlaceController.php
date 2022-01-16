@@ -17,6 +17,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 
+
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+
 class PlaceController extends Controller
 {
     private $place;
@@ -56,7 +62,7 @@ class PlaceController extends Controller
      */
     public function store(Request $request)
     {
-        try {     
+        /* try {     
             $result = ["status" => "success"];
             $result["message"] =
                 "Place success"; 
@@ -71,6 +77,30 @@ class PlaceController extends Controller
             $result["status"] = "error";
             $result["error"] = $e->getMessage();
         }
+        return $result; */
+        try {     
+            $result = ["status" => "success"];
+            $result["message"] =
+                "Place success"; 
+
+            $atributes = collect($request);
+
+            if (Place::where('name', '=', $atributes['name'])->where('idcity', '=', $atributes['idcity'])->exists()) { 
+                $result = ["status" => "warning"];
+                $result["message"] =
+                    "Place already exists";
+            } 
+            else{
+                $place = new Place();
+                $place->name = $atributes['name'];            
+                $place->idcity = $atributes['idcity'];            
+                $place->save(); 
+                $result["data"] = $place;
+            }  
+        } catch (\Exception $e) {
+            $result["status"] = "error";
+            $result["error"] = $e->getMessage();
+        }
         return $result;
     }
 
@@ -79,11 +109,71 @@ class PlaceController extends Controller
         try {     
             $result = ["status" => "success"];
             $result["message"] =
-                "Place success";  
+                "Place success"; 
             
-            $atributes = collect($request);
+            $img = $request->file('file');  
+             
+            $filename = $img->getClientOriginalName();
+            $img->storeAs('app/txt/', $filename);             
             
-            echo($atributes);
+            if ($file = fopen(storage_path('app\\txt\\'.$filename), "r")) {
+                $idcountry = '';
+                $idcity = '';
+                while(!feof($file)) {
+                    $lines = fgets($file); 
+                    $line = str_replace('+', ':', $lines);
+                    
+                    if(Str::startsWith($line, 'COUNTRY'))
+                    {
+                        $line1 = Str::of($line)->explode(':');
+                        $val = substr($line1[1], 0, strlen($line1[1])-2);
+                        if (Country::where('name', '=', $val)->exists()) {                            
+                            $country = Country::where('name', '=', $val)->first();
+                            $idcountry = $country->idcountry;
+                        } 
+                        else{
+                            $country = new Country();                        
+                            $country->name = $val;            
+                            $country->save(); 
+                            $idcountry = $country->idcountry; 
+                        }                        
+                    }
+                   if(Str::startsWith($line, 'CITY'))
+                    {
+                        $line1 = Str::of($line)->explode(':');
+                        $val = substr($line1[1], 0, strlen($line1[1])-2);
+                        if (City::where('name', '=', $val)->exists()) {                            
+                            $city = City::where('name', '=', $val)->first();
+                            $idcity = $city->idcity;
+                        } 
+                        else{
+                            $city = new City();
+                            $city->name = $val;          
+                            $city->idcountry = $idcountry;            
+                            $city->save();
+                            $idcity = $city->idcity; 
+                        }                          
+                    }
+
+                    if(Str::startsWith($line, 'LOCATION'))
+                    {
+                        $line1 = Str::of($line)->explode(':');
+                        $val = substr($line1[1], 0, strlen($line1[1])-2);
+                        if (Place::where('name', '=', $val)->exists()) {                            
+                            $place = Place::where('name', '=', $val)->first();
+                            $idplace = $place->idplace;                            
+                        } 
+                        else{
+                            $place = new Place();
+                            $place->name = $val;          
+                            $place->idcity = $idcity;            
+                            $place->save(); 
+                        }                                             
+                    }  
+                }
+                fclose($file);
+            }  
+
             
         } catch (\Exception $e) {
             $result["status"] = "error";

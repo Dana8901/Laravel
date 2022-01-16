@@ -61,23 +61,7 @@ class PlaceController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {
-        /* try {     
-            $result = ["status" => "success"];
-            $result["message"] =
-                "Place success"; 
-            
-            $atributes = collect($request);
-            $place = new Place();
-            $place->name = $atributes['name'];            
-            $place->idcity = $atributes['idcity'];            
-            $place->save(); 
-            $result["data"] = $place;
-        } catch (\Exception $e) {
-            $result["status"] = "error";
-            $result["error"] = $e->getMessage();
-        }
-        return $result; */
+    {        
         try {     
             $result = ["status" => "success"];
             $result["message"] =
